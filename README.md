@@ -1,91 +1,75 @@
-# SpringBoot_Lesson9.2
+# SpringBoot_Lesson10.1
 
 ## Propmt for the Code Agent (Codex, Gemini Code Assistant or Copilot)
 
 **Context**:
 
-I am learning to write integration tests for a Spring Boot REST API using Spring Boot 3.3 and Java 17.
+I am writing a data-layer test for a Spring Boot application using Spring Boot 3.3 and Java 17 (Maven project). 
 
-I want to test the controller layer and HTTP responses using MockMvc, while mocking the service layer.
-
-The project has Basic auth enabled: endpoint pattern /tasks/** requires role USER, and there is an in-memory user user with password password.
+The goal is to test a Spring Data JPA repository in a fast, isolated way.
 
 **Task**:
 
-Generate a JUnit 5 integration test for a TaskController class.
-
-**Known code in the app**:
-
-Controller: com.example.demo.controller.TaskController
-
-GET /tasks/{id} returns a TaskDto
-
-GET /tasks supports optional completed query param
-
-POST /tasks accepts a Task and returns a TaskDto (201 Created)
-
-Service: com.example.demo.service.TaskService
-
-Methods include TaskDto getTaskById(long id)
-
-DTO: com.example.demo.dto.TaskDto (record: TaskDto(Long id, String description, boolean completed))
-
-Security: Basic auth required for /tasks/**; in-memory user user / password.
+Generate a JUnit 5 test for a TaskRepository interface.
 
 **Constraints**:
 
-Use @SpringBootTest to load the application context.
+The test must use the @DataJpaTest slice test annotation.
 
-Use @AutoConfigureMockMvc to test the web layer without a real HTTP server.
+It should use the default in-memory H2 database configured by @DataJpaTest.
 
-Mock TaskService with @MockBean.
+The test needs to inject and use the TestEntityManager to prepare data.
 
-Use MockMvc to perform the request.
+The repository being tested, TaskRepository, should also be injected.
 
-Include a Basic auth header for the request (user:password).
+Use AssertJ for assertions.
+
+Do not use @SpringBootTest.
+
+**Project specifics**:
+
+Package: com.example.demo
+
+Entity: Task with fields id (Long), description (String), and completed (boolean).
+
+Repository: TaskRepository extends JpaRepository<Task, Long> with List<Task> findByCompleted(boolean completed).
 
 **Steps**:
 
-Create src/test/java/com/example/demo/controller/TaskControllerTest.java with package com.example.demo.controller.
+Assume a Task entity exists with id, description, and completed.
 
-Annotate the test class with @SpringBootTest and @AutoConfigureMockMvc.
+Assume TaskRepository extends JpaRepository<Task, Long> and has findByCompleted(boolean completed).
 
-Inject MockMvc and declare @MockBean TaskService taskService.
+Generate TaskRepositoryTest.java under src/test/java/com/example/demo.
 
-Stub taskService.getTaskById(1L) to return new TaskDto(1L, "Test Task", false).
+In the test method, use TestEntityManager to persist a new Task with completed = true.
 
-Perform a GET request to /tasks/1 with Basic auth for user:password.
+Use TaskRepository to find tasks by completed = true via findByCompleted(true).
 
-Assert HTTP status 200 (OK).
+Assert that the retrieved list is not empty and contains a task with the expected description and completed = true.
 
-Assert the response is JSON and matches the DTO: id = 1, description = "Test Task", completed = false (e.g., using jsonPath).
-
-Include commands to run only this test using Maven or Gradle.
-
-**Acceptance Criteria**:
-
-The test class is annotated with @SpringBootTest and @AutoConfigureMockMvc.
-
-TaskService is mocked with @MockBean.
-
-The test performs a request using MockMvc and includes Basic auth.
-
-The test verifies HTTP 200 OK.
-
-The test verifies the JSON response body fields.
-
-The test compiles and passes.
+Include the command to run the test.
 
 **Deliverables**:
 
-Full code for TaskControllerTest.java.
+The full code for TaskRepositoryTest.java.
 
-Commands to run the test.
+Confirmation that TaskRepository includes List<Task> findByCompleted(boolean completed) (no production change required).
 
-**Run Only This Test**:
+The command to run the test.
 
-Maven: mvn test -Dtest=com.example.demo.controller.TaskControllerTest
+**Acceptance Criteria**:
 
-Gradle (Windows): gradlew.bat test --tests "com.example.demo.controller.TaskControllerTest"
+The test class has the @DataJpaTest annotation.
 
-Gradle (Unix/macOS): ./gradlew test --tests "com.example.demo.controller.TaskControllerTest"
+The test does not use @SpringBootTest.
+
+The test uses TestEntityManager to set up the data.
+
+The test uses the injected TaskRepository to execute the query.
+
+The test successfully asserts the data integrity.
+
+**Command to run**:
+
+mvn -Dtest=TaskRepositoryTest test
